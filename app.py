@@ -1,16 +1,12 @@
-# app.py
-# Streamlit app: Dropshipping Product Hunter + Ad Watch & Creative Studio
-# What it does (free stack):
-# 1) Product hunting: Google Trends momentum score for keywords; quick links to official ad libraries to see live ads.
-# 2) Sales estimator: projections from known order counts (AliExpress, Shopify, Amazon) + margin calculator. No scraping of restricted sites.
-# 3) Ad Watch: one-click deep links to Meta/TikTok/Google/Snap/Pinterest ad libraries per keyword.
-# 4) Creative Studio: auto-generate ad scripts/captions; create ad images with overlays; assemble simple MP4 videos from images using MoviePy.
-#
-# Run locally: `pip install streamlit pytrends pandas numpy pillow moviepy requests`
-# Start: `streamlit run app.py`
+# app.py (Streamlit)
+# Dropshipping Product Hunter + Ad Watch & Creative Studio (no video generation)
+# Features:
+# - Product hunting with Google Trends momentum
+# - Sales & margin estimator
+# - Ad Watch (official ad libraries)
+# - Creative Studio: ad scripts + image creatives (no video)
 
 import io
-import math
 import textwrap
 import urllib.parse as up
 from datetime import datetime
@@ -19,7 +15,7 @@ import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from pytrends.request import TrendReq
 
 st.set_page_config(page_title="Dropship Hunter + Creative Studio", page_icon="🛒", layout="wide")
@@ -170,7 +166,7 @@ with tabs[2]:
 
 # ------------------- Creative Studio -------------------
 with tabs[3]:
-    st.subheader("Creative Studio — scripts, images, and quick videos (free)")
+    st.subheader("Creative Studio — scripts and images")
     st.markdown("#### A) Auto-generate ad copy & scripts")
     prod = st.text_input("Product name", "Magnetic Lashes")
     usp = st.text_area("Key benefits / USP (one per line)", "No glue needed\nWaterproof\nReusable up to 30 wears")
@@ -199,11 +195,9 @@ with tabs[3]:
             for idx, f in enumerate(img_files, start=1):
                 img = Image.open(f).convert("RGBA").resize((1080,1080))
                 draw = ImageDraw.Draw(img)
-                # simple semi-transparent bar
                 bar_h = 260
                 overlay = Image.new('RGBA', (1080, bar_h), (0,0,0,140))
                 img.alpha_composite(overlay, (0, 1080-bar_h))
-                # fonts: rely on PIL default; for better look, user can add .ttf path
                 draw.text((40, 860), hl, fill=(255,255,255,255))
                 draw.text((40, 940), price_tag, fill=(144,238,144,255))
                 draw.text((40, 1000), cta, fill=(255,255,255,255))
@@ -211,26 +205,5 @@ with tabs[3]:
                 zf.writestr(f"creative_{idx}.jpg", buf.getvalue())
         st.download_button("Download image pack (ZIP)", data=out_zip_bytes.getvalue(), file_name="image_creatives.zip")
 
-    st.markdown("#### C) Assemble quick video from images (MP4)")
-    vid_imgs = st.file_uploader("Upload 2–8 images", type=["png","jpg","jpeg"], accept_multiple_files=True, key="vidimgs")
-    per_scene = st.slider("Seconds per scene", 1.0, 5.0, 2.0, 0.5)
-    audio = st.file_uploader("Optional background audio (MP3/M4A)", type=["mp3","m4a"], key="audio")
-    if st.button("Render video", disabled=not vid_imgs):
-        clips = []
-        for f in vid_imgs:
-            img = Image.open(f).convert("RGB").resize((1080,1080))
-            buf = io.BytesIO(); img.save(buf, format="JPEG", quality=92)
-            clip = ImageClip(buf.getvalue()).set_duration(per_scene)
-            clips.append(clip)
-        video = concatenate_videoclips(clips, method="compose")
-        if audio is not None:
-            audioclip = AudioFileClip(audio.name)
-            video = video.set_audio(audioclip.set_duration(video.duration))
-        out = io.BytesIO()
-        video.write_videofile("out.mp4", fps=30, codec="libx264", audio_codec="aac")
-        with open("out.mp4","rb") as f:
-            st.download_button("Download video (MP4)", data=f.read(), file_name="creative.mp4", mime="video/mp4")
-        for c in clips: c.close()
-
 st.markdown("---")
-st.caption("Notes: This app avoids scraping restricted sources; use official ad libraries to verify live ads. Provide your own royalty‑free audio for videos. All processing happens locally while the app runs.")
+st.caption("Notes: This app avoids scraping restricted sources; use official ad libraries to verify live ads. All processing happens in Streamlit environment. Video generation was removed for compatibility with Streamlit Cloud.")
