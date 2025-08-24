@@ -20,7 +20,6 @@ import pandas as pd
 import requests
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
-from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 from pytrends.request import TrendReq
 
 st.set_page_config(page_title="Dropship Hunter + Creative Studio", page_icon="🛒", layout="wide")
