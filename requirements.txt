@@ -1,0 +1,7 @@
+streamlit
+pytrends
+pandas
+numpy
+pillow
+moviepy
+requests
